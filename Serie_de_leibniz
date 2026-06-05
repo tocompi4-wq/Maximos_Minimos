@@ -1,0 +1,56 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def estimar_pi_leibniz(N):
+    k = np.arange(N)
+    terminos = ((-1.0)**k) / (2.0 * k + 1.0)
+    return 4.0 * np.sum(terminos)
+
+def optimizar_r2_leibniz(N_valores, pi_N):
+    pi_inf_posibles = np.linspace(3.14, 3.15, 500)
+    mejor_r2 = -np.inf
+    mejor_pi = 0
+    
+    # El error de Leibniz decae de forma algebraica de orden O(1/N)
+    inv_N = 1.0 / N_valores
+    
+    for pi_inf in pi_inf_posibles:
+        error = pi_inf - pi_N
+        slope, intercept = np.polyfit(inv_N, error, 1)
+        valores_ajustados = slope * inv_N + intercept
+        
+        ss_res = np.sum((error - valores_ajustados) ** 2)
+        ss_tot = np.sum((error - np.mean(error)) ** 2)
+        r2 = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
+        
+        if r2 > mejor_r2:
+            mejor_r2 = r2
+            mejor_pi = pi_inf
+            
+    return mejor_pi, mejor_r2
+
+if __name__ == "__main__":
+    N_max = 5000
+    paso = 200
+    N_valores = np.arange(paso, N_max + paso, paso)
+    
+    # Experimento Numérico
+    pi_lz = np.array([estimar_pi_leibniz(n) for n in N_valores])
+    
+    # Optimización del R^2 para Leibniz
+    pi_inf_lz, r2_lz = optimizar_r2_leibniz(N_valores, pi_lz)
+    
+    print(" PUNTO 5: SERIE DE LEIBNIZ ")
+    print(f"Última aproximación con N={N_max} es = {pi_lz[-1]:.5f}")
+    print(f"Valor de pi_inf (R^2 Máximo) = {pi_inf_lz:.5f} con R^2 = {r2_lz:.4f}")
+
+    # Gráfica de convergencia
+    plt.figure(figsize=(8, 4))
+    plt.plot(N_valores, pi_lz, label='Serie de Leibniz', color='green')
+    plt.axhline(y=np.pi, color='red', linestyle='--', label=r'Valor Real $\pi$')
+    plt.title(r'Convergencia Numérica: Serie de Leibniz')
+    plt.xlabel('Número de términos (N)')
+    plt.ylabel(r'Valor de $\pi$')
+    plt.grid(True, linestyle=':')
+    plt.legend()
+    plt.show()
